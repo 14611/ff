@@ -1,7 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
+
 @font-face {
   font-family: 'Minecraft';
   src: url('Minecraft.ttf') format('truetype');
 }
+
+
 
 :root{
   --navy-1:#0b1730;
@@ -27,14 +31,14 @@ html,body{
     radial-gradient(ellipse at 90% 110%, rgba(231,185,194,.12), transparent 55%),
     linear-gradient(160deg,var(--navy-1),var(--navy-2) 55%, var(--navy-1));
   color:var(--cream);
-  font-family:'Minecraft',sans-serif;
+  font-family:'Poppins',sans-serif;
   min-height:100vh;
   overflow-x:hidden;
 }
 .hidden{display:none !important;}
-h1,h2,h3,.display{font-family:'Minecraft',serif;}
+h1,h2,h3,.display{font-family:'Playfair Display',serif;}
 button{
-  font-family:'Minecraft',sans-serif;
+  font-family:'Poppins',sans-serif;
   cursor:pointer;
   border:none;
   border-radius:10px;
@@ -83,7 +87,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
   backdrop-filter:blur(8px);
   border-bottom:1px solid rgba(212,175,55,.25);
 }
-.topbar .brand{display:flex;align-items:center;gap:10px;font-family:'Minecraft',serif;font-weight:800;letter-spacing:.03em;color:var(--gold-light);}
+.topbar .brand{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-weight:800;letter-spacing:.03em;color:var(--gold-light);}
 .topbar .brand .ring{width:12px;height:12px;border:2px solid var(--gold);border-radius:50%;}
 .topbar-actions{display:flex;gap:10px;flex-wrap:wrap;}
 
@@ -107,7 +111,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
 .card h2{margin:0 0 16px;font-size:1.3rem;color:var(--gold-light);display:flex;align-items:center;gap:10px;}
 .card h2 .num{
   width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--navy-1);
-  display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;font-family:'Minecraft';font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;font-family:'Poppins';font-weight:700;
 }
 
 .teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
@@ -115,7 +119,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
 .team-input label{display:block;font-size:.8rem;color:var(--blush);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
 .team-input input{
   width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(212,175,55,.35);
-  background:rgba(0,0,0,.25);color:var(--cream);font-size:1.05rem;font-family:'Minecraft',serif;font-weight:700;
+  background:rgba(0,0,0,.25);color:var(--cream);font-size:1.05rem;font-family:'Playfair Display',serif;font-weight:700;
 }
 .team-input.a input{border-color:rgba(212,175,55,.6);}
 .team-input.b input{border-color:rgba(231,185,194,.6);}
@@ -160,7 +164,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
   border-radius:var(--radius);
   padding:16px 26px;
   text-align:center;
-  font-family:'Minecraft',serif;
+  font-family:'Playfair Display',serif;
   font-size:clamp(1.1rem,2.4vw,1.6rem);
   font-weight:700;
   margin-bottom:22px;
@@ -185,7 +189,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
 .team-card.b{border-color:var(--blush-deep);}
 .team-card .tname{font-size:1rem;letter-spacing:.05em;color:var(--gold-light);text-transform:uppercase;margin-bottom:4px;}
 .team-card.b .tname{color:var(--blush);}
-.team-card .tscore{font-family:'Minecraft',serif;font-size:clamp(2.4rem,6vw,3.6rem);font-weight:800;line-height:1;}
+.team-card .tscore{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,6vw,3.6rem);font-weight:800;line-height:1;}
 .pot-card{
   min-width:150px;text-align:center;
   background:radial-gradient(circle at 50% 0%,rgba(212,175,55,.25),transparent 70%);
@@ -194,13 +198,13 @@ button:focus-visible, input:focus-visible, select:focus-visible{
   padding:14px 18px;
 }
 .pot-card .plabel{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--blush);}
-.pot-card .pval{font-family:'Minecraft',serif;font-size:2.2rem;font-weight:800;color:var(--gold-light);}
+.pot-card .pval{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:800;color:var(--gold-light);}
 
 .strikes-row{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
 .strike-x{
   width:52px;height:52px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;
-  font-family:'Minecraft',serif;font-weight:900;font-size:1.8rem;
+  font-family:'Playfair Display',serif;font-weight:900;font-size:1.8rem;
   border:2px solid rgba(192,57,43,.35);color:rgba(192,57,43,.25);
   background:rgba(0,0,0,.2);
   transition:all .25s ease;
@@ -244,9 +248,9 @@ button:focus-visible, input:focus-visible, select:focus-visible{
 }
 .answer-front .qnum{
   width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--navy-1);
-  display:flex;align-items:center;justify-content:center;font-family:'Minecraft',serif;font-weight:800;
+  display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:800;
 }
-.answer-front .qmark{color:var(--gold-light);font-size:1.4rem;font-family:'Minecraft',serif;}
+.answer-front .qmark{color:var(--gold-light);font-size:1.4rem;font-family:'Playfair Display',serif;}
 .answer-back{
   background:linear-gradient(180deg,var(--gold-light),var(--gold));
   color:var(--navy-1);
@@ -254,10 +258,10 @@ button:focus-visible, input:focus-visible, select:focus-visible{
   justify-content:space-between;
   border:2px solid var(--gold-dark);
 }
-.answer-back .atext{font-family:'Minecraft';font-size:1rem;font-weight:700;}
+.answer-back .atext{font-family:'Poppins';font-size:1rem;font-weight:700;}
 .answer-back .apts{
   background:var(--navy-1);color:var(--gold-light);
-  padding:4px 12px;border-radius:8px;font-family:'Minecraft',serif;font-weight:800;
+  padding:4px 12px;border-radius:8px;font-family:'Playfair Display',serif;font-weight:800;
 }
 
 .board-actions{display:flex;justify-content:center;gap:14px;margin-top:26px;flex-wrap:wrap;}
@@ -317,7 +321,7 @@ button:focus-visible, input:focus-visible, select:focus-visible{
 }
 .editor-q-card input.qtitle{
   width:100%;padding:10px;border-radius:8px;border:1px solid rgba(212,175,55,.35);
-  background:rgba(0,0,0,.25);color:var(--cream);font-family:'Minecraft',serif;font-weight:700;margin-bottom:10px;
+  background:rgba(0,0,0,.25);color:var(--cream);font-family:'Playfair Display',serif;font-weight:700;margin-bottom:10px;
 }
 .editor-ans-row{display:flex;gap:8px;margin-bottom:6px;align-items:center;}
 .editor-ans-row input.atext{flex:1;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:var(--cream);}
