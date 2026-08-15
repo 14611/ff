@@ -11,32 +11,6 @@ function esc(s) {
   return d.innerHTML;
 }
 
-/* ---------- Automatyczne skalowanie ekranu (bez przewijania, dopasowanie do okna/projektora) ---------- */
-function applyAutoFit(stageEl, opts) {
-  if (!stageEl) return;
-  opts = opts || {};
-  const minScale = opts.minScale ?? 0.55;
-  const maxScale = opts.maxScale ?? 1.6; // Plansza może się mocno powiększyć na dużym projektorze
-  stageEl.style.transform = 'none';
-  const natW = stageEl.scrollWidth;
-  const natH = stageEl.scrollHeight;
-  if (!natW || !natH) return;
-  let scale = Math.min(window.innerWidth / natW, window.innerHeight / natH);
-  scale = Math.max(minScale, Math.min(maxScale, scale));
-  stageEl.style.transformOrigin = 'top center';
-  stageEl.style.transform = `scale(${scale})`;
-}
-
-function fitBoardStage() {
-  applyAutoFit(document.getElementById('boardView'));
-}
-
-let fitResizeRaf = null;
-window.addEventListener('resize', () => {
-  if (fitResizeRaf) cancelAnimationFrame(fitResizeRaf);
-  fitResizeRaf = requestAnimationFrame(fitBoardStage);
-});
-
 function render() {
   const root = document.getElementById('boardView');
 
@@ -50,30 +24,24 @@ function render() {
   } else {
     root.innerHTML = renderWaitingScreen();
   }
-
-  fitBoardStage();
 }
 
 function renderWaitingScreen() {
   return `
     <div
       class="winner-wrap"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif;">
 
-      <div
-        class="rings"
-        style="font-family: 'Minecraft', sans-serif;"
-      >
-        💍
+      <div>
+        <img src="../assets/logo.png" width="185" height="185" />
       </div>
 
-      <h1 style="font-family: 'Minecraft', sans-serif;">
-        Familiada Weselna
+      <h1>
+        Familiada
       </h1>
 
       <p
-        style="font-size:1.15rem; color:var(--blush); font-family:'Minecraft', sans-serif;"
+        style="font-size:1.15rem; font-family: 'Minecraft', sans-serif;"
       >
         Prowadzący konfiguruje grę... Zaraz zaczynamy! 🥂
       </p>
@@ -86,16 +54,14 @@ function renderBoardScreen(s) {
   return `
     <div
       class="round-header"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif;">
 
       ${
         s.isFinal
           ? `
             <div
               class="badge-final"
-              style="font-family: 'Minecraft', sans-serif;"
-            >
+             style="font-family: 'Minecraft', sans-serif;">
               Runda Finałowa
             </div>
           `
@@ -104,16 +70,15 @@ function renderBoardScreen(s) {
 
       <div
         class="round-label"
-        style="font-family: 'Minecraft', sans-serif; font-size:1.15rem;"
-      >
+       style="font-family: 'Minecraft', sans-serif; font-size: 1.25rem;">
         Runda ${s.roundIndex + 1} z ${s.totalRounds}
       </div>
 
-      <h2 style="font-family: 'Minecraft', sans-serif;">
+      <h2 style="font-family: 'Minecraft', sans-serif; font-size: 2.15rem;">
         ${esc(s.teamA.name)}
 
         <span
-          style="color:var(--blush); font-family:'Minecraft', sans-serif;"
+          style="color:var(--blush); ;"
         >
           vs
         </span>
@@ -122,8 +87,7 @@ function renderBoardScreen(s) {
 
         <span
           class="mult-badge"
-          style="font-family: 'Minecraft', sans-serif;"
-        >
+         style="font-family: 'Minecraft', sans-serif;">
           Mnożnik x${s.multiplier}
         </span>
       </h2>
@@ -132,32 +96,27 @@ function renderBoardScreen(s) {
 
     <div
       class="question-banner"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif; font-size: 1.5rem;">
       ${esc(s.question)}
     </div>
 
     <div
       class="scoreboard"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif;">
 
       <div
         class="team-card a"
-        style="font-family: 'Minecraft', sans-serif;"
-      >
+       style="font-family: 'Minecraft', sans-serif;">
 
         <div
           class="tname"
-          style="font-family: 'Minecraft', sans-serif; font-size:1.65rem;"
-        >
+         style="font-family: 'Minecraft', sans-serif; font-size: 1.75rem;">
           ${esc(s.teamA.name)}
         </div>
 
         <div
           class="tscore"
-          style="font-family: 'Minecraft', sans-serif;"
-        >
+         style="font-family: 'Minecraft', sans-serif; font-size: 1.55rem;">
           ${s.teamA.score}
         </div>
 
@@ -165,20 +124,17 @@ function renderBoardScreen(s) {
 
       <div
         class="pot-card"
-        style="font-family: 'Minecraft', sans-serif;"
-      >
+       style="font-family: 'Minecraft', sans-serif;">
 
         <div
           class="plabel"
-          style="font-family: 'Minecraft', sans-serif; font-size:1.15rem; color:#e7b9c2;"
-        >
+         style="font-family: 'Minecraft', sans-serif; font-size: 1.15rem;">
           Pula rundy
         </div>
 
         <div
           class="pval"
-          style="font-family: 'Minecraft', sans-serif;"
-        >
+         style="font-family: 'Minecraft', sans-serif;">
           ${s.pot}
         </div>
 
@@ -186,20 +142,17 @@ function renderBoardScreen(s) {
 
       <div
         class="team-card b"
-        style="font-family: 'Minecraft', sans-serif;"
-      >
+       style="font-family: 'Minecraft', sans-serif;">
 
         <div
           class="tname"
-          style="font-family: 'Minecraft', sans-serif; font-size:1.65rem;"
-        >
+         style="font-family: 'Minecraft', sans-serif; font-size: 1.75rem;">
           ${esc(s.teamB.name)}
         </div>
 
         <div
           class="tscore"
-          style="font-family: 'Minecraft', sans-serif;"
-        >
+         style="font-family: 'Minecraft', sans-serif; font-size: 1.55rem;">
           ${s.teamB.score}
         </div>
 
@@ -209,16 +162,14 @@ function renderBoardScreen(s) {
 
     <div
       class="strikes-row"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif;">
 
       ${[0, 1, 2]
         .map(
           i => `
             <div
               class="strike-x ${i < s.strikes ? 'active' : ''}"
-              style="font-family: 'Minecraft', sans-serif;"
-            >
+             style="font-family: 'Minecraft', sans-serif;">
               X
             </div>
           `
@@ -229,38 +180,32 @@ function renderBoardScreen(s) {
 
     <div
       class="board-grid"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     style="font-family: 'Minecraft', sans-serif;">
 
       ${s.answers
         .map(
           (a, i) => `
             <div
               class="answer-slot ${a.revealed ? 'revealed' : ''}"
-              style="font-family: 'Minecraft', sans-serif;"
-            >
+             style="font-family: 'Minecraft', sans-serif;">
 
               <div
                 class="answer-inner"
-                style="font-family: 'Minecraft', sans-serif;"
-              >
+               style="font-family: 'Minecraft', sans-serif;">
 
                 <div
                   class="answer-face answer-front"
-                  style="font-family: 'Minecraft', sans-serif;"
-                >
+                 style="font-family: 'Minecraft', sans-serif;">
 
                   <span
                     class="qnum"
-                    style="font-family: 'Minecraft', sans-serif; font-size:2.15rem;"
-                  >
+                   style="font-family: 'Minecraft', sans-serif;">
                     ${i + 1}
                   </span>
 
                   <span
                     class="qmark"
-                    style="font-family: 'Minecraft', sans-serif;"
-                  >
+                   style="font-family: 'Minecraft', sans-serif;">
                     ?
                   </span>
 
@@ -268,20 +213,17 @@ function renderBoardScreen(s) {
 
                 <div
                   class="answer-face answer-back"
-                  style="font-family: 'Minecraft', sans-serif;"
-                >
+                 style="font-family: 'Minecraft', sans-serif;">
 
                   <span
                     class="atext"
-                    style="font-family: 'Minecraft', sans-serif; font-size:2.15rem;"
-                  >
+                   style="font-family: 'Minecraft', sans-serif; font-size: 1.55rem;">
                     ${esc(a.text)}
                   </span>
 
                   <span
                     class="apts"
-                    style="font-family: 'Minecraft', sans-serif; font-size:1.75rem;"
-                  >
+                   style="font-family: 'Minecraft', sans-serif; font-size: 1.45rem;">
                     ${a.points}
                   </span>
 
@@ -311,14 +253,12 @@ function renderWinnerScreen(s) {
   return `
     <div
       class="winner-wrap"
-      style="font-family: 'Minecraft', sans-serif;"
-    >
+     >
 
       <div
         class="rings"
-        style="font-family: 'Minecraft', sans-serif;"
-      >
-        💍 🥂 💍
+       >
+        <img src="../assets/logo.png" width="185" height="185" />
       </div>
 
       <h1 style="font-family: 'Minecraft', sans-serif;">
@@ -326,40 +266,34 @@ function renderWinnerScreen(s) {
       </h1>
 
       <p
-        style="font-size:1.15rem; color:var(--blush); font-family:'Minecraft', sans-serif;"
+        style="font-size:1.15rem; font-family: 'Minecraft', sans-serif; font-size: 1.25rem;"
       >
         ${
           tie
             ? 'Obie drużyny grały równo do samego końca.'
-            : `${esc(winnerName)} wygrywa Familiadę Weselną!`
+            : `${esc(winnerName)} wygrywa Familiadę!`
         }
       </p>
 
       <div
         class="scoreboard"
-        style="margin-top:24px; font-family:'Minecraft', sans-serif;"
+        style="margin-top:24px; font-family: 'Minecraft', sans-serif;"
       >
 
         <div
           class="team-card a"
-          style="${
-            !tie && aWins
-              ? 'box-shadow:0 0 30px rgba(212,175,55,.6); font-family:\'Minecraft\', sans-serif;'
-              : 'font-family:\'Minecraft\', sans-serif;'
-          }"
-        >
+          
+         style="font-family: 'Minecraft', sans-serif;">
 
           <div
             class="tname"
-            style="font-family: 'Minecraft', sans-serif;"
-          >
+           style="font-family: 'Minecraft', sans-serif; font-size: 2.0rem;">
             ${esc(s.teamA.name)}
           </div>
 
           <div
             class="tscore"
-            style="font-family: 'Minecraft', sans-serif;"
-          >
+           style="font-family: 'Minecraft', sans-serif; font-size: 1.75rem;">
             ${s.teamA.score}
           </div>
 
@@ -367,24 +301,18 @@ function renderWinnerScreen(s) {
 
         <div
           class="team-card b"
-          style="${
-            !tie && !aWins
-              ? 'box-shadow:0 0 30px rgba(212,175,55,.6); font-family:\'Minecraft\', sans-serif;'
-              : 'font-family:\'Minecraft\', sans-serif;'
-          }"
+          style="${!tie && !aWins ? 'box-shadow:0 0 30px rgba(212,175,55,.6);' : ''}; font-family: 'Minecraft', sans-serif;"
         >
 
           <div
             class="tname"
-            style="font-family: 'Minecraft', sans-serif;"
-          >
+           style="font-family: 'Minecraft', sans-serif; font-size: 2.0rem;">
             ${esc(s.teamB.name)}
           </div>
 
           <div
             class="tscore"
-            style="font-family: 'Minecraft', sans-serif;"
-          >
+           style="font-family: 'Minecraft', sans-serif; font-size: 1.75rem;">
             ${s.teamB.score}
           </div>
 

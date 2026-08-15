@@ -216,7 +216,7 @@ function renderSetup(){
   el.innerHTML = `
     <div class="setup-wrap">
       <div class="setup-hero">
-        <div class="rings">💍</div>
+        <div class="rings"><img src="../assets/logo.png" width="185" height="185" /></div>
         <h1>Familiada Weselna</h1>
         <p>Skonfiguruj drużyny i rundy, a potem rozpocznij zabawę!</p>
       </div>
@@ -478,7 +478,7 @@ function renderWinner(){
 
   el.innerHTML = `
     <div class="winner-wrap">
-      <div class="rings">💍 🥂 💍</div>
+      <div class="rings"><img src="../assets/logo.png" width="185" height="185" /></div>
       <h1>${tie ? 'Remis!' : 'Gratulacje!'}</h1>
       <p style="font-size:1.15rem;color:var(--blush);">${tie ? 'Obie drużyny grały równo do samego końca.' : `${esc(winnerName)} wygrywa Familiadę Weselną!`}</p>
       <div class="final-score">
