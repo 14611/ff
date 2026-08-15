@@ -11,6 +11,32 @@ function esc(s) {
   return d.innerHTML;
 }
 
+/* ---------- Automatyczne skalowanie ekranu (bez przewijania, dopasowanie do okna/projektora) ---------- */
+function applyAutoFit(stageEl, opts) {
+  if (!stageEl) return;
+  opts = opts || {};
+  const minScale = opts.minScale ?? 0.55;
+  const maxScale = opts.maxScale ?? 1.6; // Plansza może się mocno powiększyć na dużym projektorze
+  stageEl.style.transform = 'none';
+  const natW = stageEl.scrollWidth;
+  const natH = stageEl.scrollHeight;
+  if (!natW || !natH) return;
+  let scale = Math.min(window.innerWidth / natW, window.innerHeight / natH);
+  scale = Math.max(minScale, Math.min(maxScale, scale));
+  stageEl.style.transformOrigin = 'top center';
+  stageEl.style.transform = `scale(${scale})`;
+}
+
+function fitBoardStage() {
+  applyAutoFit(document.getElementById('boardView'));
+}
+
+let fitResizeRaf = null;
+window.addEventListener('resize', () => {
+  if (fitResizeRaf) cancelAnimationFrame(fitResizeRaf);
+  fitResizeRaf = requestAnimationFrame(fitBoardStage);
+});
+
 function render() {
   const root = document.getElementById('boardView');
 
@@ -24,6 +50,8 @@ function render() {
   } else {
     root.innerHTML = renderWaitingScreen();
   }
+
+  fitBoardStage();
 }
 
 function renderWaitingScreen() {
@@ -76,7 +104,7 @@ function renderBoardScreen(s) {
 
       <div
         class="round-label"
-        style="font-family: 'Minecraft', sans-serif;"
+        style="font-family: 'Minecraft', sans-serif; font-size:1.15rem;"
       >
         Runda ${s.roundIndex + 1} z ${s.totalRounds}
       </div>
@@ -121,7 +149,7 @@ function renderBoardScreen(s) {
 
         <div
           class="tname"
-          style="font-family: 'Minecraft', sans-serif;"
+          style="font-family: 'Minecraft', sans-serif; font-size:1.65rem;"
         >
           ${esc(s.teamA.name)}
         </div>
@@ -142,7 +170,7 @@ function renderBoardScreen(s) {
 
         <div
           class="plabel"
-          style="font-family: 'Minecraft', sans-serif;"
+          style="font-family: 'Minecraft', sans-serif; font-size:1.15rem; color:#e7b9c2;"
         >
           Pula rundy
         </div>
@@ -163,7 +191,7 @@ function renderBoardScreen(s) {
 
         <div
           class="tname"
-          style="font-family: 'Minecraft', sans-serif;"
+          style="font-family: 'Minecraft', sans-serif; font-size:1.65rem;"
         >
           ${esc(s.teamB.name)}
         </div>
@@ -224,7 +252,7 @@ function renderBoardScreen(s) {
 
                   <span
                     class="qnum"
-                    style="font-family: 'Minecraft', sans-serif;"
+                    style="font-family: 'Minecraft', sans-serif; font-size:2.15rem;"
                   >
                     ${i + 1}
                   </span>
@@ -245,14 +273,14 @@ function renderBoardScreen(s) {
 
                   <span
                     class="atext"
-                    style="font-family: 'Minecraft', sans-serif;"
+                    style="font-family: 'Minecraft', sans-serif; font-size:2.15rem;"
                   >
                     ${esc(a.text)}
                   </span>
 
                   <span
                     class="apts"
-                    style="font-family: 'Minecraft', sans-serif;"
+                    style="font-family: 'Minecraft', sans-serif; font-size:1.75rem;"
                   >
                     ${a.points}
                   </span>

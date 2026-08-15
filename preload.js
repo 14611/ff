@@ -5,6 +5,15 @@ contextBridge.exposeInMainWorld('familiadaAPI', {
   exportJson: (jsonString) => ipcRenderer.invoke('export-json', jsonString),
   importJson: () => ipcRenderer.invoke('import-json'),
 
+  // Autozapis / autoodczyt banku pytań (bez okna dialogowego, przeżywa restart aplikacji)
+  saveBank: (jsonString) => ipcRenderer.invoke('save-bank', jsonString),
+  loadBank: () => ipcRenderer.invoke('load-bank'),
+
+  // Ustawienia ekranu: lista monitorów, wczytanie/zapisanie i natychmiastowe zastosowanie wyboru
+  getDisplays: () => ipcRenderer.invoke('get-displays'),
+  loadDisplaySettings: () => ipcRenderer.invoke('load-display-settings'),
+  applyDisplaySettings: (settings) => ipcRenderer.invoke('apply-display-settings', settings),
+
   // Okno Prowadzącego -> Okno Planszy: wysyła aktualny stan gry
   syncBoard: (payload) => ipcRenderer.send('board-sync', payload),
 

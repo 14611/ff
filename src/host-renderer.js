@@ -1,4 +1,3 @@
-
 /* =========================================================
    FAMILIADA WESELNA — logika gry
    ========================================================= */
@@ -40,6 +39,33 @@ const DEFAULT_QUESTIONS = [
 /* ---------- Stan aplikacji ---------- */
 let bank = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
 let editorDraft = null; // kopia robocza pytań podczas edycji
+
+/* ---------- Trwały zapis banku pytań (autozapis na dysku, przeżywa restart) ---------- */
+function persistBank(){
+  if(!window.familiadaAPI || !window.familiadaAPI.saveBank) return;
+  window.familiadaAPI.saveBank(JSON.stringify(bank)).catch(()=>{});
+}
+async function loadPersistedBank(){
+  if(!window.familiadaAPI || !window.familiadaAPI.loadBank) return;
+  try{
+    const res = await window.familiadaAPI.loadBank();
+    if(res && res.ok && res.content){
+      const data = JSON.parse(res.content);
+      if(Array.isArray(data) && data.every(q=>q && q.question!=null && Array.isArray(q.answers))){
+        bank = data;
+        return;
+      }
+    }
+    // Pierwsze uruchomienie (albo brak/uszkodzony plik) — zapisujemy domyślne pytania
+    // OD RAZU do tego samego pliku, żeby był jedynym miejscem, w którym żyją pytania
+    // (edytor je potem tylko modyfikuje/dopisuje, zamiast trzymać osobną kopię w kodzie).
+    persistBank();
+  }catch(e){
+    // Nieprawidłowy/uszkodzony plik zapisu — zostajemy przy domyślnych pytaniach.
+    console.warn('Nie udało się wczytać zapisanego banku pytań:', e);
+    persistBank();
+  }
+}
 
 let game = {
   screen: 'setup', // setup | board | winner
@@ -96,26 +122,65 @@ function defaultMultiplierForRound(i, total){
   return i < 2 ? 1 : 2;
 }
 
+/* ---------- Automatyczne skalowanie ekranu (bez przewijania, dopasowanie do okna) ---------- */
+// Skaluje realną (nieskalowaną) zawartość tak, żeby zawsze zmieściła się w oknie w całości —
+// pomniejsza, gdy okno jest małe / niskie, powiększa, gdy okno jest duże (np. projektor).
+function applyAutoFit(stageEl, opts){
+  if(!stageEl) return;
+  opts = opts || {};
+  const minScale = opts.minScale ?? 0.55;
+  const maxScale = opts.maxScale ?? 1.3;
+  stageEl.style.transform = 'none';
+  const natW = stageEl.scrollWidth;
+  const natH = stageEl.scrollHeight;
+  if(!natW || !natH) return;
+  let scale = Math.min(window.innerWidth / natW, window.innerHeight / natH);
+  scale = Math.max(minScale, Math.min(maxScale, scale));
+  stageEl.style.transformOrigin = 'top center';
+  stageEl.style.transform = `scale(${scale})`;
+}
+
+// Dobiera element aktualnie widocznego ekranu i dopasowuje go do rozmiaru okna.
+function fitActiveScreen(){
+  let stage = null;
+  if(game.screen === 'setup') stage = document.querySelector('#setupScreen .setup-wrap');
+  else if(game.screen === 'board') stage = document.getElementById('hostPanel');
+  else if(game.screen === 'winner') stage = document.querySelector('#winnerScreen .winner-wrap');
+  applyAutoFit(stage);
+}
+
+let fitResizeRaf = null;
+window.addEventListener('resize', () => {
+  if(fitResizeRaf) cancelAnimationFrame(fitResizeRaf);
+  fitResizeRaf = requestAnimationFrame(fitActiveScreen);
+});
+
 /* =========================================================
    RENDER: TOPBAR
    ========================================================= */
 function renderTopbar(){
   const el = document.getElementById('topbarActions');
-  if(game.screen !== 'board'){ el.innerHTML=''; return; }
-  el.innerHTML = `
+  const boardBtns = game.screen === 'board' ? `
     <button class="btn-outline btn-small" id="btnShowBoard">🖥️ Pokaż okno Planszy</button>
     <button class="btn-outline btn-small" id="btnSound">${game.soundOn ? '🔊 Dźwięk' : '🔇 Wyciszono'}</button>
     <button class="btn-outline btn-small" id="btnEditorTop">✏️ Edytor pytań</button>
     <button class="btn-outline btn-small" id="btnEndGame">🏁 Zakończ grę</button>
+  ` : '';
+  el.innerHTML = `
+    ${boardBtns}
+    <button class="btn-outline btn-small" id="btnDisplaySettings">🖥️ Ustawienia ekranu</button>
   `;
-  document.getElementById('btnShowBoard').onclick = async ()=>{
-    if(window.familiadaAPI) await window.familiadaAPI.focusOrReopenBoard();
-  };
-  document.getElementById('btnSound').onclick = ()=>{ game.soundOn=!game.soundOn; renderAll(); };
-  document.getElementById('btnEditorTop').onclick = openEditor;
-  document.getElementById('btnEndGame').onclick = ()=>{
-    if(confirm('Zakończyć grę i przejść do ekranu wyników?')){ game.screen='winner'; renderAll(); }
-  };
+  if(game.screen === 'board'){
+    document.getElementById('btnShowBoard').onclick = async ()=>{
+      if(window.familiadaAPI) await window.familiadaAPI.focusOrReopenBoard();
+    };
+    document.getElementById('btnSound').onclick = ()=>{ game.soundOn=!game.soundOn; renderAll(); };
+    document.getElementById('btnEditorTop').onclick = openEditor;
+    document.getElementById('btnEndGame').onclick = ()=>{
+      if(confirm('Zakończyć grę i przejść do ekranu wyników?')){ game.screen='winner'; renderAll(); }
+    };
+  }
+  document.getElementById('btnDisplaySettings').onclick = openDisplaySettings;
 }
 
 /* =========================================================
@@ -126,17 +191,24 @@ function renderSetup(){
   if(game.screen!=='setup'){ el.classList.add('hidden'); el.innerHTML=''; return; }
   el.classList.remove('hidden');
 
-  const rows = bank.map((q,i)=>{
+  const orderedIdx = [
+    ...game.playlist,                                    // zaznaczone: w kolejności rund (ważne dla ▲▼)
+    ...bank.map((_,i)=>i).filter(i=>!game.playlist.includes(i)) // reszta: w kolejności bazy pytań
+  ];
+
+  const rows = orderedIdx.map(i=>{
+    const q = bank[i];
     const selected = game.playlist.includes(i);
     const pos = game.playlist.indexOf(i);
     return `
     <div class="q-picker-item ${selected?'selected':''}" data-idx="${i}">
+      ${selected ? `<div class="order-num" title="Kolejność rundy">${pos+1}</div>` : ''}
       <input type="checkbox" ${selected?'checked':''} data-action="toggle-q" data-idx="${i}">
       <div class="qtext">${esc(q.question)}</div>
       <div class="qmeta">${q.answers.length} odp.</div>
       ${selected ? `<div class="order-btns">
-        <button data-action="q-up" data-idx="${i}" title="Wyżej">▲</button>
-        <button data-action="q-down" data-idx="${i}" title="Niżej">▼</button>
+        <button data-action="q-up" data-idx="${i}" title="Wyżej" ${pos===0?'disabled style="opacity:.35;cursor:not-allowed;"':''}>▲</button>
+        <button data-action="q-down" data-idx="${i}" title="Niżej" ${pos===game.playlist.length-1?'disabled style="opacity:.35;cursor:not-allowed;"':''}>▼</button>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -152,12 +224,12 @@ function renderSetup(){
       <div class="card">
         <h2><span class="num">1</span> Drużyny</h2>
         <div class="teams-grid">
-          <div class="team-input a">
+          <div class="team-input a" color: #EFBF04;>
             <label>Nazwa Drużyny A</label>
             <input id="teamAInput" value="${esc(game.teamA.name)}" maxlength="30">
           </div>
-          <div class="team-input b">
-            <label>Nazwa Drużyny B</label>
+          <div class="team-input b" color: #EFBF04;>
+            <label color: #EFBF04;>Nazwa Drużyny B</label>
             <input id="teamBInput" value="${esc(game.teamB.name)}" maxlength="30">
           </div>
         </div>
@@ -187,6 +259,7 @@ function renderSetup(){
   document.getElementById('btnLoadDefaults').onclick = ()=>{
     if(bank.length===0 || confirm('To doda domyślne pytania weselne do obecnej bazy. Kontynuować?')){
       DEFAULT_QUESTIONS.forEach(q=>bank.push(JSON.parse(JSON.stringify(q))));
+      persistBank();
       renderAll();
     }
   };
@@ -455,14 +528,129 @@ function launchConfetti(){
 }
 
 /* =========================================================
-   EDYTOR PYTAŃ
+   USTAWIENIA EKRANU (monitor / rozdzielczość / tryb dla każdego okna)
    ========================================================= */
+let displaySettingsDraft = null;
+
+async function openDisplaySettings(){
+  if(!window.familiadaAPI || !window.familiadaAPI.getDisplays){
+    alert('Ustawienia ekranu są dostępne tylko w aplikacji desktopowej.');
+    return;
+  }
+  const [displays, settings] = await Promise.all([
+    window.familiadaAPI.getDisplays(),
+    window.familiadaAPI.loadDisplaySettings()
+  ]);
+  displaySettingsDraft = {
+    displays,
+    mode: settings.mode,
+    host: { ...settings.host },
+    board: { ...settings.board }
+  };
+  // Jeśli nikt jeszcze nie wybrał monitora ręcznie, podpowiadamy sensowne wartości domyślne
+  // (Prowadzący = ekran główny, Plansza = drugi ekran, jeśli jest; inaczej też główny).
+  const primary = displays.find(x=>x.isPrimary) || displays[0];
+  const secondary = displays.find(x=>!x.isPrimary) || primary;
+  if(displaySettingsDraft.host.displayId==null && primary) displaySettingsDraft.host.displayId = primary.id;
+  if(displaySettingsDraft.board.displayId==null && secondary) displaySettingsDraft.board.displayId = secondary.id;
+  renderDisplaySettings();
+}
+
+function closeDisplaySettings(){
+  displaySettingsDraft = null;
+  const overlay = document.getElementById('displayModal');
+  overlay.classList.add('hidden');
+  overlay.innerHTML = '';
+}
+
+function renderDisplaySettings(){
+  const overlay = document.getElementById('displayModal');
+  const d = displaySettingsDraft;
+  overlay.classList.remove('hidden');
+
+  const displayOptions = (selectedId) => d.displays.map(disp=>
+    `<option value="${disp.id}" ${disp.id===selectedId?'selected':''}>${esc(disp.label)}${d.displays.length===1?'':''}</option>`
+  ).join('');
+
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-width:560px;">
+      <h2>🖥️ Ustawienia ekranu</h2>
+      <p class="muted" style="margin-top:-8px;">Wybierz, jak mają się otwierać oba okna: automatycznie, czy ręcznie — osobno dla trybu Prowadzącego (admin) i Planszy (widz).</p>
+
+      <div class="display-mode-row">
+        <label class="radio-row">
+          <input type="radio" name="dmode" value="auto" ${d.mode==='auto'?'checked':''}>
+          Automatycznie <span class="muted">(jak dotychczas — wykrywa drugi ekran)</span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="dmode" value="manual" ${d.mode==='manual'?'checked':''}>
+          Ręcznie — wybieram monitor i tryb dla każdego okna
+        </label>
+      </div>
+
+      <div id="manualDisplayFields" class="${d.mode==='manual'?'':'hidden'}">
+        <div class="display-window-card">
+          <h3>👑 Panel Prowadzącego (admin)</h3>
+          <label>Monitor
+            <select id="hostDisplaySelect">${displayOptions(d.host.displayId)}</select>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="hostFullscreen" ${d.host.fullscreen?'checked':''}>
+            Pełny ekran
+          </label>
+        </div>
+        <div class="display-window-card">
+          <h3>🎬 Plansza (widz)</h3>
+          <label>Monitor
+            <select id="boardDisplaySelect">${displayOptions(d.board.displayId)}</select>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="boardFullscreen" ${d.board.fullscreen?'checked':''}>
+            Pełny ekran
+          </label>
+        </div>
+      </div>
+
+      <p class="muted" style="font-size:.8rem;">Wykryto ${d.displays.length} ${d.displays.length===1?'ekran':'ekrany/ekranów'}. Zmiany zastosują się od razu, bez ponownego uruchamiania aplikacji.</p>
+
+      <div class="modal-close-row">
+        <button class="btn-outline" id="btnCancelDisplay">Anuluj</button>
+        <button class="btn-gold" id="btnApplyDisplay">✅ Zastosuj</button>
+      </div>
+    </div>
+  `;
+
+  overlay.querySelectorAll('input[name="dmode"]').forEach(r=>{
+    r.onchange = ()=>{
+      d.mode = r.value;
+      document.getElementById('manualDisplayFields').classList.toggle('hidden', d.mode!=='manual');
+    };
+  });
+  const hostSel = document.getElementById('hostDisplaySelect');
+  const boardSel = document.getElementById('boardDisplaySelect');
+  if(hostSel) hostSel.onchange = ()=>{ d.host.displayId = parseInt(hostSel.value); };
+  if(boardSel) boardSel.onchange = ()=>{ d.board.displayId = parseInt(boardSel.value); };
+  const hostFs = document.getElementById('hostFullscreen');
+  const boardFs = document.getElementById('boardFullscreen');
+  if(hostFs) hostFs.onchange = ()=>{ d.host.fullscreen = hostFs.checked; };
+  if(boardFs) boardFs.onchange = ()=>{ d.board.fullscreen = boardFs.checked; };
+
+  document.getElementById('btnCancelDisplay').onclick = closeDisplaySettings;
+  document.getElementById('btnApplyDisplay').onclick = async ()=>{
+    const payload = { mode: d.mode, host: d.host, board: d.board };
+    const res = await window.familiadaAPI.applyDisplaySettings(payload);
+    if(res && res.ok){ closeDisplaySettings(); }
+    else{ alert('Nie udało się zastosować ustawień: '+(res && res.error ? res.error : 'nieznany błąd')); }
+  };
+}
+
+
 function openEditor(){
   editorDraft = JSON.parse(JSON.stringify(bank));
   renderEditor();
 }
 function closeEditor(save){
-  if(save){ bank = editorDraft; }
+  if(save){ bank = editorDraft; persistBank(); }
   editorDraft = null;
   document.getElementById('editorModal').classList.add('hidden');
   document.getElementById('editorModal').innerHTML='';
@@ -649,6 +837,10 @@ function renderAll(){
   renderWinner();
   pushBoardState();
   window.scrollTo(0, scrollY);
+  fitActiveScreen();
 }
 
-renderAll();
+(async function init(){
+  await loadPersistedBank(); // jeśli jest zapisany plik z pytaniami, wczytaj go zamiast domyślnych
+  renderAll();
+})();
