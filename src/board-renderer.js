@@ -258,7 +258,7 @@ function renderWinnerScreen(s) {
       <div
         class="rings"
        >
-        <img src="../assets/logo.png" width="185" height="185" />
+        <img src="../assets/logo.png" width="165" height="165" />
       </div>
 
       <h1 style="font-family: 'Minecraft', sans-serif;">
